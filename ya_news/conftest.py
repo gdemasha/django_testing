@@ -43,7 +43,7 @@ def comment(author, news):
 
 
 @pytest.fixture
-def all_comments(author, news, freezer):
+def all_comments(author, news):
     now = timezone.now()
     for index in range(2):
         comment = Comment.objects.create(
