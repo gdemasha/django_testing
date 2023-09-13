@@ -1,10 +1,9 @@
-import pytest
-
 from datetime import datetime, timedelta
 
+import pytest
 from django.conf import settings
-from django.utils import timezone
 from django.urls import reverse
+from django.utils import timezone
 
 from news.models import Comment, News
 
@@ -44,7 +43,7 @@ def comment(author, news):
 
 
 @pytest.fixture
-def all_comments(author, news):
+def all_comments(author, news, freezer):
     now = timezone.now()
     for index in range(2):
         comment = Comment.objects.create(
@@ -86,5 +85,5 @@ def form_data():
 @pytest.fixture
 def url_to_comments(news_id):
     news_url = reverse('news:detail', args=news_id)
-    url_to_comments = news_url + '#comments'
+    url_to_comments = f'{news_url}#comments'
     return url_to_comments

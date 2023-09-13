@@ -1,7 +1,6 @@
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-
 from notes.models import Note
 
 User = get_user_model()
@@ -56,8 +55,6 @@ class TestContent(TestCase):
         """
         url = reverse('notes:list')
         response = self.author_client.get(url)
-        note = self.note
-        other_note = self.others_note
         object_list = response.context['object_list']
-        self.assertIn(note, object_list)
-        self.assertNotIn(other_note, object_list)
+        self.assertIn(self.note, object_list)
+        self.assertNotIn(self.others_note, object_list)

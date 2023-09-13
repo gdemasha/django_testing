@@ -1,13 +1,11 @@
 from http import HTTPStatus
 
-from pytils.translit import slugify
-
 from django.contrib.auth import get_user_model
 from django.test import Client, TestCase
 from django.urls import reverse
-
-from notes.models import Note
 from notes.forms import WARNING
+from notes.models import Note
+from pytils.translit import slugify
 
 User = get_user_model()
 
@@ -19,12 +17,6 @@ class NoteCreation(TestCase):
     @classmethod
     def setUpTestData(cls):
         cls.user = User.objects.create(username='Автор')
-        cls.note = Note.objects.create(
-            title='Опа',
-            text='Тут',
-            slug='slug',
-            author=cls.user,
-        )
         cls.url = reverse('notes:add')
         cls.success_url = reverse('notes:success')
         cls.auth_client = Client()
@@ -32,36 +24,42 @@ class NoteCreation(TestCase):
         cls.form_data = {
             'title': 'Заголовок',
             'text': 'Текст',
-            'slug': '',
+            'slug': 'zagolovok',
         }
 
     def test_anon_cant_create_note(self):
         """Анонимный пользователь не может создать запись."""
         self.client.post(self.url, data=self.form_data)
         notes_count = Note.objects.count()
-        self.assertEqual(notes_count, 1)
+        self.assertEqual(notes_count, 0)
 
     def test_user_can_create_note(self):
         """Залогиненный пользователь может создать запись."""
         response = self.auth_client.post(self.url, data=self.form_data)
         self.assertRedirects(response, self.success_url)
         notes_count = Note.objects.count()
-        self.assertEqual(notes_count, 2)
-        note = Note.objects.last()
-        self.assertEqual(note.title, 'Заголовок')
-        self.assertEqual(note.text, 'Текст')
+        self.assertEqual(notes_count, 1)
+        note = Note.objects.get()
+        self.assertEqual(note.title, self.form_data['title'])
+        self.assertEqual(note.text, self.form_data['text'])
         self.assertEqual(note.author, self.user)
-        self.assertEqual(note.slug, 'zagolovok')
+        self.assertEqual(note.slug, self.form_data['slug'])
 
     def test_not_unique_slug(self):
         """Если слаг не уникален, запись не будет создана."""
-        slug = {'slug': self.note.slug}
-        response = self.auth_client.post(self.url, data=slug)
+        note = Note.objects.create(
+            title='Опа',
+            text='Тут',
+            slug='slug',
+            author=self.user,
+        )
+        self.form_data['slug'] = note.slug
+        response = self.auth_client.post(self.url, data=self.form_data)
         self.assertFormError(
             response,
             form='form',
             field='slug',
-            errors=f'{slug["slug"]}{WARNING}',
+            errors=f'{note.slug}{WARNING}',
         )
         note_count = Note.objects.count()
         self.assertEqual(note_count, 1)
@@ -72,8 +70,8 @@ class NoteCreation(TestCase):
         new_slug = slugify(self.form_data['title'])[:self.MAX_LENGTH]
         self.assertRedirects(response, self.success_url)
         note_count = Note.objects.count()
-        self.assertEqual(note_count, 2)
-        note = Note.objects.last()
+        self.assertEqual(note_count, 1)
+        note = Note.objects.get()
         self.assertEqual(note.slug, new_slug)
 
 
