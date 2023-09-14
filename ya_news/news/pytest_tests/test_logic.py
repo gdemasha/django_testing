@@ -31,12 +31,13 @@ def test_user_can_create_comment(admin_client, form_data, news_id):
 def test_user_cant_use_bad_words(admin_client, news_id):
     """Пользователь не может использовать запрещенные слова."""
     url = reverse('news:detail', args=news_id)
-    bad_words_data = {'text': f'Какой-то текст, {BAD_WORDS}, еще текст'}
+    for word in BAD_WORDS:
+        bad_words_data = {'text': f'Какой-то текст, {word}, еще текст'}
 
-    response = admin_client.post(url, data=bad_words_data)
+        response = admin_client.post(url, data=bad_words_data)
 
-    assertFormError(response, 'form', 'text', errors=WARNING)
-    assert Comment.objects.count() == 0
+        assertFormError(response, 'form', 'text', errors=WARNING)
+        assert Comment.objects.count() == 0
 
 
 def test_author_can_delete_comment(
