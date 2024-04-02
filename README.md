@@ -2,6 +2,8 @@
 
 ## Описание
 
+Стек: Django, Pytest, Unittest
+
 ### Тесты на unittest для проекта YaNote
 
 * В файле test_routes.py:
